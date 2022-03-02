@@ -3,3 +3,5 @@ documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
   - sha: 9d4e7d123c5aba4fe1448bcdaf52c3b400de7231
     changeNotes: Update License file to trigger submit
+  - sha: beb8dd267113f2b46409271dd88f8f629c42a441
+    changeNotes: Add source=gtmv2 to the Pixli call
