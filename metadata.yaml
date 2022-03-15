@@ -5,3 +5,5 @@ versions:
     changeNotes: Update License file to trigger submit
   - sha: beb8dd267113f2b46409271dd88f8f629c42a441
     changeNotes: Add source=gtmv2 to the Pixli call
+  - sha: 968ffeb3aee3105fb1e298ccda53e3653e0f0fff
+    changeNotes: Update QP to `tm` from `source`

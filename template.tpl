@@ -98,7 +98,7 @@ const generateQueryParams = function() {
   const encodedPIDs = encodeUriComponent(getAllPids().join(','));
 
   let result = "pid=" + encodedPIDs;
-  result += '&source=gtmv2';
+  result += '&tm=gtmv2';
   result += data.conversionId ? "&conversionId=" + encodeUriComponent(data.conversionId) : "";
 
   let pageUrl = data.conversionUrl ? encodeUriComponent(data.conversionUrl) : getUrl();
@@ -390,7 +390,7 @@ scenarios:
     };
 
     mock('sendPixel', (url, onSuccess, onFailure) => {
-      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&source=gtmv2&conversionId=12576358&url=google.com&v=2&fmt=js&time=');
+      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&tm=gtmv2&conversionId=12576358&url=google.com&v=2&fmt=js&time=');
       onSuccess();
     });
 
@@ -402,7 +402,7 @@ scenarios:
     const mockData = { partnerId: '123' };
 
     mock('sendPixel', (url, onSuccess, onFailure) => {
-      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&source=gtmv2&url=' + getUrl() + '&v=2&fmt=js&time=');
+      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&tm=gtmv2&url=' + getUrl() + '&v=2&fmt=js&time=');
       onSuccess();
     });
 
