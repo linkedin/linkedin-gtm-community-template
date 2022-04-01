@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: 7cb568d5767354fa8028b1b15bc5bc47e8cd7936
+    changeNotes: Add the ability to track using InsightTag APIs
   - sha: 9531c5714a14558b04cb0ae1e276b5e1ef330afb
     changeNotes: Update QP to `tm` from `source`
   - sha: beb8dd267113f2b46409271dd88f8f629c42a441
