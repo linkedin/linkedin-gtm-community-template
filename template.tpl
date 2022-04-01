@@ -62,17 +62,33 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
-// Enter your template code here.
-const log = require('logToConsole');
 const getUrl = require('getUrl');
+const log = require('logToConsole');
 const sendPixel = require('sendPixel');
+const assertThat = require('assertThat');
+const setInWindow = require('setInWindow');
 const getTimestamp = require('getTimestamp');
+const injectScript = require('injectScript');
 const copyFromWindow = require('copyFromWindow');
 const encodeUriComponent = require('encodeUriComponent');
 
-const getAllPids = function () {
+/**
+ * Globals
+ */
+const allPids = [];
+const pageUrl = data.conversionUrl ? encodeUriComponent(data.conversionUrl) : getUrl();
+
+/**
+ * Checks presence of LinkedIn Insight tag code.
+ */
+const isInsightTagAPIAvailable = () => typeof copyFromWindow('lintrk') === 'function';
+
+/**
+ * Reads and Set immediately (IIFE) in global namespace all applicable PIDs on the page
+ * Needed for GTM downloaded InsightTag code to be able to read PID.
+ */
+const setAllPids = (function() {
   const partnerIds = {};
-  const allPids = [];
   const bizoId = copyFromWindow('_bizo_data_partner_id');
   const bizoIds = copyFromWindow('_bizo_data_partner_ids') || [];
   const linkedInPartnerId = copyFromWindow('_linkedin_data_partner_id');
@@ -85,31 +101,68 @@ const getAllPids = function () {
     }
   };
 
+  // add the regular partner id via GTM
   addPid(encodeUriComponent(data.partnerId));
+
+  // add PIDs from page
   addPid(bizoId);
   bizoIds.forEach(id => addPid(id));
   addPid(linkedInPartnerId);
   linkedInPartnerIds.forEach(id => addPid(id));
 
-  return allPids;
-};
+  setInWindow('_linkedin_data_partner_ids', allPids);
+}());
 
-const generateQueryParams = function() {
-  const encodedPIDs = encodeUriComponent(getAllPids().join(','));
+/**
+ * Generate query params only for GTM based tracking
+ */
+function generateQueryParamsForGTM() {
+  const encodedPIDs = encodeUriComponent(allPids.join(','));
 
   let result = "pid=" + encodedPIDs;
   result += '&tm=gtmv2';
   result += data.conversionId ? "&conversionId=" + encodeUriComponent(data.conversionId) : "";
-
-  let pageUrl = data.conversionUrl ? encodeUriComponent(data.conversionUrl) : getUrl();
   result += pageUrl ? "&url=" + pageUrl : "&url=" + getUrl();
   result += "&v=2&fmt=js&time=" + getTimestamp();
   return result;
-};
+}
 
-const trackingUrl = 'https://px.ads.linkedin.com/collect/?' + generateQueryParams();
+// Success call back to InsightTag injection
+function didInjectInsightTag() {
+  trackByInsightTag();
+}
 
-sendPixel(trackingUrl, data.gtmOnSuccess, data.gtmOnFailure);
+// Callback to plain GTM when InsightTag code failed to inject
+function didFailInsightTag() {
+  trackByPlainGTM();
+}
+
+function trackByPlainGTM() {
+  const trackingUrl = 'https://px.ads.linkedin.com/collect/?' + generateQueryParamsForGTM();
+  sendPixel(trackingUrl, data.gtmOnSuccess, data.gtmOnFailure);
+}
+
+/**
+ * Download LinkedIn Insight tag core code if `window.lintrk` is not available
+ * Also ensure it doesn’t default fire.
+ */
+function trackByInsightTag() {
+  if (isInsightTagAPIAvailable()) {
+    const lintrk = copyFromWindow('lintrk');
+    const options = { tmsource: 'gtmv2' };
+    if (data.conversionId) {
+      options.conversion_id = encodeUriComponent(data.conversionId);
+    }
+
+    options.conversion_url = pageUrl;
+    lintrk('track', options);
+  } else {
+    setInWindow('_already_called_lintrk', true, true);
+    injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js', didInjectInsightTag, didFailInsightTag);
+  }
+}
+
+trackByInsightTag();
 
 
 ___WEB_PERMISSIONS___
@@ -329,7 +382,85 @@ ___WEB_PERMISSIONS___
                   },
                   {
                     "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
                     "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "lintrk"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "_already_called_lintrk"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
                   },
                   {
                     "type": 8,
@@ -374,6 +505,32 @@ ___WEB_PERMISSIONS___
       "isEditedByUser": true
     },
     "isRequired": true
+  },
+  {
+    "instance": {
+      "key": {
+        "publicId": "inject_script",
+        "versionId": "1"
+      },
+      "param": [
+        {
+          "key": "urls",
+          "value": {
+            "type": 2,
+            "listItem": [
+              {
+                "type": 1,
+                "string": "https://snap.licdn.com/*"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "clientAnnotations": {
+      "isEditedByUser": true
+    },
+    "isRequired": true
   }
 ]
 
@@ -381,7 +538,7 @@ ___WEB_PERMISSIONS___
 ___TESTS___
 
 scenarios:
-- name: Test sendPixel URL when all fields present
+- name: No API - Test sendPixel with custom URL and single conversionId
   code: |-
     const mockData = {
       partnerId: '123',
@@ -396,7 +553,7 @@ scenarios:
 
     runCode(mockData);
     assertApi('gtmOnSuccess').wasCalled();
-- name: Test sendPixel URL when missing fields
+- name: No API - Test sendPixel with page URL and no conversionId
   code: |-
     const getUrl = require('getUrl');
     const mockData = { partnerId: '123' };
@@ -408,10 +565,20 @@ scenarios:
 
     runCode(mockData);
     assertApi('gtmOnSuccess').wasCalled();
+- name: With API - test script injection
+  code: |-
+    const getUrl = require('getUrl');
+    const mockData = { partnerId: '123' };
+    const copyFromWindow = require('copyFromWindow');
+
+    mock('injectScript', url => {
+      assertThat(url, 'correct script download URL is called').isEqualTo('https://snap.licdn.com/li.lms-analytics/insight.min.js');
+    });
+
+    runCode(mockData);
+    assertApi('injectScript').wasCalled();
 
 
 ___NOTES___
 
 Created on 11/17/2021, 11:34:21 AM
-
-
