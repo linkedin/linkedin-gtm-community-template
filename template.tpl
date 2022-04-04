@@ -52,9 +52,9 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "TEXT",
     "name": "customUrl",
-    "displayName": "Custom URL",
+    "displayName": "Custom URL override",
     "simpleValueType": true,
-    "help": "(Optional) Enter a URL provided by LinkedIn’s MOTS team. Note: this is uncommon.",
+    "help": "(Override) This is different than Match rules. Enter a URL only if you were specifically provided one by LinkedIn team to override.",
     "canBeEmptyString": true
   }
 ]
@@ -76,7 +76,7 @@ const encodeUriComponent = require('encodeUriComponent');
  * Globals
  */
 const allPids = [];
-const pageUrl = data.conversionUrl ? encodeUriComponent(data.conversionUrl) : getUrl();
+const pageUrl = data.customUrl ? data.customUrl : getUrl();
 
 /**
  * Checks presence of LinkedIn Insight tag code.
@@ -122,7 +122,7 @@ function generateQueryParamsForGTM() {
   let result = "pid=" + encodedPIDs;
   result += '&tm=gtmv2';
   result += data.conversionId ? "&conversionId=" + encodeUriComponent(data.conversionId) : "";
-  result += pageUrl ? "&url=" + pageUrl : "&url=" + getUrl();
+  result += encodeUriComponent(pageUrl);
   result += "&v=2&fmt=js&time=" + getTimestamp();
   return result;
 }
@@ -151,7 +151,7 @@ function trackByInsightTag() {
     const lintrk = copyFromWindow('lintrk');
     const options = { tmsource: 'gtmv2' };
     if (data.conversionId) {
-      options.conversion_id = encodeUriComponent(data.conversionId);
+      options.conversion_id = data.conversionId;
     }
 
     options.conversion_url = pageUrl;
