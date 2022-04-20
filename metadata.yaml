@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: 46e5195a0588d17add614251f71b283f6dffa079
+    changeNotes: Update the global namespace with all PIDs for continuity
   - sha: e8ff4f11d02d4bb9b5c3621e0ab1927da75ab774
     changeNotes: Remove extra encoding of page URLs and update custom URL description
   - sha: 7cb568d5767354fa8028b1b15bc5bc47e8cd7936
