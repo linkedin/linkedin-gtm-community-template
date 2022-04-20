@@ -61,7 +61,6 @@ ___TEMPLATE_PARAMETERS___
 
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
-
 const getUrl = require('getUrl');
 const log = require('logToConsole');
 const sendPixel = require('sendPixel');
@@ -84,8 +83,7 @@ const pageUrl = data.customUrl ? data.customUrl : getUrl();
 const isInsightTagAPIAvailable = () => typeof copyFromWindow('lintrk') === 'function';
 
 /**
- * Reads and Set immediately (IIFE) in global namespace all applicable PIDs on the page
- * Needed for GTM downloaded InsightTag code to be able to read PID.
+ * Reads and Sets in global namespace all applicable PIDs on the page
  */
 const setAllPids = (function() {
   const partnerIds = {};
@@ -101,16 +99,19 @@ const setAllPids = (function() {
     }
   };
 
-  // add the regular partner id via GTM
+  // add the partner id set via this GTM installation
   addPid(encodeUriComponent(data.partnerId));
 
-  // add PIDs from page
-  addPid(bizoId);
-  bizoIds.forEach(id => addPid(id));
+  // Add all PIDs that may have updated the global, helps skipping following adds.
   addPid(linkedInPartnerId);
   linkedInPartnerIds.forEach(id => addPid(id));
 
-  setInWindow('_linkedin_data_partner_ids', allPids);
+  // add other PIDs from page
+  addPid(bizoId);
+  bizoIds.forEach(id => addPid(id));
+
+  // Update the main namespace for future tracking by InsightTag to include the partner IDs
+  setInWindow('_linkedin_data_partner_ids', allPids, true);
 }());
 
 /**
@@ -119,11 +120,11 @@ const setAllPids = (function() {
 function generateQueryParamsForGTM() {
   const encodedPIDs = encodeUriComponent(allPids.join(','));
 
-  let result = "pid=" + encodedPIDs;
+  let result = 'pid=' + encodedPIDs;
   result += '&tm=gtmv2';
-  result += data.conversionId ? "&conversionId=" + encodeUriComponent(data.conversionId) : "";
-  result += encodeUriComponent(pageUrl);
-  result += "&v=2&fmt=js&time=" + getTimestamp();
+  result += data.conversionId ? '&conversionId=' + encodeUriComponent(data.conversionId) : '';
+  result += '&url=' + encodeUriComponent(pageUrl);
+  result += '&v=2&fmt=js&time=' + getTimestamp();
   return result;
 }
 
@@ -138,7 +139,7 @@ function didFailInsightTag() {
 }
 
 function trackByPlainGTM() {
-  const trackingUrl = 'https://px.ads.linkedin.com/collect/?' + generateQueryParamsForGTM();
+  const trackingUrl = 'https://px.ads.linkedin.com/collect?' + generateQueryParamsForGTM();
   sendPixel(trackingUrl, data.gtmOnSuccess, data.gtmOnFailure);
 }
 
@@ -163,7 +164,6 @@ function trackByInsightTag() {
 }
 
 trackByInsightTag();
-
 
 ___WEB_PERMISSIONS___
 
