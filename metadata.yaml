@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: a9ddc4da16cb07158b7e04ce9a1dd99791b5ef64
+    changeNotes: Add multiple PIDs
   - sha: 46e5195a0588d17add614251f71b283f6dffa079
     changeNotes: Update the global namespace with all PIDs for continuity
   - sha: e8ff4f11d02d4bb9b5c3621e0ab1927da75ab774
