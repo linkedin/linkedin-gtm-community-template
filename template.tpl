@@ -99,8 +99,9 @@ const setAllPids = (function() {
     }
   };
 
-  // add the partner id set via this GTM installation
-  addPid(encodeUriComponent(data.partnerId));
+  // add the partner ids set via this GTM installation
+  const inputPids = data.partnerId.split(',');
+  inputPids.forEach(id => addPid(id.trim()));
 
   // Add all PIDs that may have updated the global, helps skipping following adds.
   addPid(linkedInPartnerId);
