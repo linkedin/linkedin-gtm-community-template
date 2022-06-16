@@ -34,20 +34,31 @@ ___TEMPLATE_PARAMETERS___
     "name": "partnerId",
     "displayName": "Partner ID / Insight Tag ID",
     "simpleValueType": true,
-    "notSetText": "A Partner ID must be set.",
+    "notSetText": "Enter one or more Partner IDs separated by comma",
     "valueValidators": [
       {
-        "type": "POSITIVE_NUMBER"
+        "type": "REGEX",
+        "args": [
+          "^\\d+(,\\s?\\d+)*$"
+        ]
       }
     ]
   },
   {
     "type": "TEXT",
     "name": "conversionId",
-    "displayName": "Conversion ID(s)",
+    "displayName": "Conversion IDs (max. 3)",
     "simpleValueType": true,
-    "help": "(Optional) Enter one or more conversion ids separated by comma, for event-specific conversions created in LinkedIn’s Campaign manager.",
-    "canBeEmptyString": true
+    "help": "Enter 1-3 conversion ids separated by comma. Only first 3 conversion ids will be sent. This field is optional",
+    "canBeEmptyString": true,
+    "valueValidators": [
+      {
+        "type": "REGEX",
+        "args": [
+          "^\\d+(,\\s?\\d+)*$"
+        ]
+      }
+    ]
   },
   {
     "type": "TEXT",
@@ -61,6 +72,7 @@ ___TEMPLATE_PARAMETERS___
 
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
+
 const getUrl = require('getUrl');
 const log = require('logToConsole');
 const sendPixel = require('sendPixel');
@@ -74,6 +86,9 @@ const encodeUriComponent = require('encodeUriComponent');
 /**
  * Globals
  */
+const conversionIds = data.conversionId ?
+      data.conversionId.split(',').slice(0,3).map(id => id.trim())
+      : '';
 const allPids = [];
 const pageUrl = data.customUrl ? data.customUrl : getUrl();
 
@@ -118,12 +133,12 @@ const setAllPids = (function() {
 /**
  * Generate query params only for GTM based tracking
  */
-function generateQueryParamsForGTM() {
+function generateQueryParamsForGTM(cid) {
   const encodedPIDs = encodeUriComponent(allPids.join(','));
 
   let result = 'pid=' + encodedPIDs;
   result += '&tm=gtmv2';
-  result += data.conversionId ? '&conversionId=' + encodeUriComponent(data.conversionId) : '';
+  result += cid ? '&conversionId=' + encodeUriComponent(cid) : '';
   result += '&url=' + encodeUriComponent(pageUrl);
   result += '&v=2&fmt=js&time=' + getTimestamp();
   return result;
@@ -132,16 +147,24 @@ function generateQueryParamsForGTM() {
 // Success call back to InsightTag injection
 function didInjectInsightTag() {
   trackByInsightTag();
+  data.gtmOnSuccess();
 }
 
 // Callback to plain GTM when InsightTag code failed to inject
 function didFailInsightTag() {
   trackByPlainGTM();
+  data.gtmOnFailure();
 }
 
 function trackByPlainGTM() {
-  const trackingUrl = 'https://px.ads.linkedin.com/collect?' + generateQueryParamsForGTM();
-  sendPixel(trackingUrl, data.gtmOnSuccess, data.gtmOnFailure);
+  if (conversionIds.length && conversionIds.length <= 3) {
+    conversionIds.forEach(id => {
+      const trackingUrl = 'https://px.ads.linkedin.com/collect?' + generateQueryParamsForGTM(id);
+      sendPixel(trackingUrl, data.gtmOnSuccess, data.gtmOnFailure);
+    });
+  } else {
+    sendPixel('https://px.ads.linkedin.com/collect?' + generateQueryParamsForGTM(), data.gtmOnSuccess, data.gtmOnFailure);
+  }
 }
 
 /**
@@ -152,19 +175,29 @@ function trackByInsightTag() {
   if (isInsightTagAPIAvailable()) {
     const lintrk = copyFromWindow('lintrk');
     const options = { tmsource: 'gtmv2' };
-    if (data.conversionId) {
-      options.conversion_id = data.conversionId;
-    }
-
     options.conversion_url = pageUrl;
-    lintrk('track', options);
+
+    if (conversionIds.length && conversionIds.length <= 3) {
+      conversionIds.forEach(id => {
+        options.conversion_id = id;
+        lintrk('track', options);
+      });
+    } else {
+      lintrk('track', options);
+    }
   } else {
     setInWindow('_already_called_lintrk', true, true);
     injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js', didInjectInsightTag, didFailInsightTag);
   }
 }
 
+/**
+ * Enable `trackByPlainGTM` for test purposes, and disable `trackByInsightTag`.
+ * trackByPlainGTM();
+ */
+
 trackByInsightTag();
+
 
 ___WEB_PERMISSIONS___
 
@@ -543,12 +576,12 @@ scenarios:
   code: |-
     const mockData = {
       partnerId: '123',
-      conversionUrl: 'google.com',
+      customUrl: 'google.com',
       conversionId: '12576358'
     };
 
     mock('sendPixel', (url, onSuccess, onFailure) => {
-      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&tm=gtmv2&conversionId=12576358&url=google.com&v=2&fmt=js&time=');
+      assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=google.com&v=2&fmt=js&time=');
       onSuccess();
     });
 
@@ -556,11 +589,12 @@ scenarios:
     assertApi('gtmOnSuccess').wasCalled();
 - name: No API - Test sendPixel with page URL and no conversionId
   code: |-
+    const encodeUriComponent = require('encodeUriComponent');
     const getUrl = require('getUrl');
     const mockData = { partnerId: '123' };
 
     mock('sendPixel', (url, onSuccess, onFailure) => {
-      assertThat(url).contains('https://px.ads.linkedin.com/collect/?pid=123&tm=gtmv2&url=' + getUrl() + '&v=2&fmt=js&time=');
+      assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&url=' + encodeUriComponent(getUrl()) + '&v=2&fmt=js&time=');
       onSuccess();
     });
 
@@ -572,14 +606,25 @@ scenarios:
     const mockData = { partnerId: '123' };
     const copyFromWindow = require('copyFromWindow');
 
-    mock('injectScript', url => {
+    mock('injectScript', (url) => {
       assertThat(url, 'correct script download URL is called').isEqualTo('https://snap.licdn.com/li.lms-analytics/insight.min.js');
     });
 
     runCode(mockData);
-    assertApi('injectScript').wasCalled();
+- name: No API - Multiple partnerIds and conversion ids
+  code: "const mockData = {\n  partnerId: '123,456, 789, 299',\n  customUrl: 'google.com',\n\
+    \  conversionId: '1, 2, 3, 4, 5'\n};\nconst callStack = [];\nmock('sendPixel',\
+    \ (url, onSuccess, onFailure) => {\n  callStack.push(url);\n  \n  // Call success\
+    \ only once when stack is full\n  if (callStack.length === 3) {\n    onSuccess();\n\
+    \  }\n});\n\nrunCode(mockData);\n\nassertThat(callStack.length).isEqualTo(3);\n\
+    \nassertThat(callStack[0]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=1&url=google.com&v=2&fmt=js&time=');\n\
+    \nassertThat(callStack[1]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=2&url=google.com&v=2&fmt=js&time=');\n\
+    \nassertThat(callStack[2]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=3&url=google.com&v=2&fmt=js&time=');\n\
+    \nassertApi('gtmOnSuccess').wasCalled();"
 
 
 ___NOTES___
 
 Created on 11/17/2021, 11:34:21 AM
+
+
