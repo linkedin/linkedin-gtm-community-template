@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: 61d7d7cf207c62b05d8e3595288c4bccf8517dab
+    changeNotes: Update conversionIds field to allow no input
   - sha: b4b9128552aafce7ec2db8088b4e248811a978fd
     changeNotes: Add multiple Conversion IDs. Resolve the tag promise when download
   - sha: a9ddc4da16cb07158b7e04ce9a1dd99791b5ef64
