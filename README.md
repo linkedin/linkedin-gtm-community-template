@@ -1,6 +1,6 @@
 #  LinkedIn Insight Tag 2.0 GTM template
 
-This tag template provides code for Google tag Manager’s [Community template gallery](https://developers.google.com/tag-platform/tag-manager/templates/gallery)
+This tag template provides LinkedIn’s InsightTag 2.0 implementation for tracking via Google tag Manager’s [Community template gallery](https://developers.google.com/tag-platform/tag-manager/templates/gallery)
 
 ## Submitting this template
 
