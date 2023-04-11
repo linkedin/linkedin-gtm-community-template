@@ -67,6 +67,14 @@ ___TEMPLATE_PARAMETERS___
     "simpleValueType": true,
     "help": "(Override) This is different than Match rules. Enter a URL only if you were specifically provided one by LinkedIn team to override.",
     "canBeEmptyString": true
+  },
+  {
+    "type": "TEXT",
+    "name": "eventId",
+    "displayName": "Event ID",
+    "simpleValueType": true,
+    "help": "Enter an event id to deduplicate insight tag conversions with Conversions API conversions. The Conversions API conversion to be deduplicated must have the same event id. This field is optional",
+    "canBeEmptyString": true
   }
 ]
 
@@ -91,6 +99,7 @@ const conversionIds = data.conversionId ?
       : '';
 const allPids = [];
 const pageUrl = data.customUrl ? data.customUrl : getUrl();
+const eventId = data.eventId;
 
 /**
  * Checks presence of LinkedIn Insight tag code.
@@ -140,6 +149,7 @@ function generateQueryParamsForGTM(cid) {
   result += '&tm=gtmv2';
   result += cid ? '&conversionId=' + encodeUriComponent(cid) : '';
   result += '&url=' + encodeUriComponent(pageUrl);
+  result += eventId ? '&eventId=' + encodeUriComponent(eventId) : '';
   result += '&v=2&fmt=js&time=' + getTimestamp();
   return result;
 }
@@ -176,6 +186,10 @@ function trackByInsightTag() {
     const lintrk = copyFromWindow('lintrk');
     const options = { tmsource: 'gtmv2' };
     options.conversion_url = pageUrl;
+
+    if (eventId) {
+      options.event_id = eventId;
+    }
 
     if (conversionIds.length && conversionIds.length <= 3) {
       conversionIds.forEach(id => {
@@ -599,6 +613,23 @@ scenarios:
 
     runCode(mockData);
     assertApi('gtmOnSuccess').wasCalled();
+- name: No API - Test sendPixel with eventId
+  code: |-
+    const encodeUriComponent = require('encodeUriComponent');
+    const getUrl = require('getUrl');
+    const mockData = {
+      partnerId: '123',
+      conversionId: '12576358',
+      eventId: 'uniqueEventId123'
+    };
+
+    mock('sendPixel', (url, onSuccess, onFailure) => {
+      assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=' + encodeUriComponent(getUrl()) + '&eventId=uniqueEventId123&v=2&fmt=js&time=');
+      onSuccess();
+    });
+
+    runCode(mockData);
+    assertApi('gtmOnSuccess').wasCalled();
 - name: With API - test script injection
   code: |-
     const getUrl = require('getUrl');
@@ -620,7 +651,6 @@ scenarios:
     \nassertThat(callStack[1]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=2&url=google.com&v=2&fmt=js&time=');\n\
     \nassertThat(callStack[2]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=3&url=google.com&v=2&fmt=js&time=');\n\
     \nassertApi('gtmOnSuccess').wasCalled();"
-
 
 ___NOTES___
 
