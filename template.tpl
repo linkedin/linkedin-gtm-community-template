@@ -613,6 +613,23 @@ scenarios:
 
     runCode(mockData);
     assertApi('gtmOnSuccess').wasCalled();
+- name: No API - Test sendPixel with eventId
+  code: |-
+    const encodeUriComponent = require('encodeUriComponent');
+    const getUrl = require('getUrl');
+    const mockData = {
+      partnerId: '123',
+      conversionId: '12576358',
+      eventId: 'uniqueEventId123'
+    };
+
+    mock('sendPixel', (url, onSuccess, onFailure) => {
+      assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=' + encodeUriComponent(getUrl()) + '&eventId=uniqueEventId123&v=2&fmt=js&time=');
+      onSuccess();
+    });
+
+    runCode(mockData);
+    assertApi('gtmOnSuccess').wasCalled();
 - name: With API - test script injection
   code: |-
     const getUrl = require('getUrl');
@@ -634,25 +651,6 @@ scenarios:
     \nassertThat(callStack[1]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=2&url=google.com&v=2&fmt=js&time=');\n\
     \nassertThat(callStack[2]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=3&url=google.com&v=2&fmt=js&time=');\n\
     \nassertApi('gtmOnSuccess').wasCalled();"
-
-- name: No API - Test sendPixel with eventId
-  code: |-
-    const encodeUriComponent = require('encodeUriComponent');
-    const getUrl = require('getUrl');
-    const mockData = {
-      partnerId: '123',
-      conversionId: '12576358',
-      eventId: 'uniqueEventId123'
-    };
-
-    mock('sendPixel', (url, onSuccess, onFailure) => {
-      assertThat(url).contains(https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=' + encodeUriComponent(getUrl()) + '&eventId=uniqueEventId123' + '&v=2&fmt=js&time=');
-      onSuccess();
-    });
-
-    runCode(mockData);
-    assertApi('gtmOnSuccess').wasCalled();
-
 
 ___NOTES___
 
