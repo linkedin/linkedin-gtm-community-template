@@ -82,9 +82,7 @@ ___TEMPLATE_PARAMETERS___
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
 const getUrl = require('getUrl');
-const log = require('logToConsole');
 const sendPixel = require('sendPixel');
-const assertThat = require('assertThat');
 const setInWindow = require('setInWindow');
 const getTimestamp = require('getTimestamp');
 const injectScript = require('injectScript');
@@ -157,13 +155,11 @@ function generateQueryParamsForGTM(cid) {
 // Success call back to InsightTag injection
 function didInjectInsightTag() {
   trackByInsightTag();
-  data.gtmOnSuccess();
 }
 
 // Callback to plain GTM when InsightTag code failed to inject
 function didFailInsightTag() {
   trackByPlainGTM();
-  data.gtmOnFailure();
 }
 
 function trackByPlainGTM() {
@@ -199,6 +195,7 @@ function trackByInsightTag() {
     } else {
       lintrk('track', options);
     }
+    data.gtmOnSuccess();
   } else {
     setInWindow('_already_called_lintrk', true, true);
     injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js', didInjectInsightTag, didFailInsightTag);
