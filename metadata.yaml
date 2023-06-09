@@ -2,7 +2,7 @@ homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
   - sha: 0d26029ef0d7e194225ebed4bd57d1ad68ee4216
-    changeNotes: Announce Success specifically whenever an event is attempted
+    changeNotes: Announce Success whenever an event is attempted from lintrk
   - sha: 61d7d7cf207c62b05d8e3595288c4bccf8517dab
     changeNotes: Update conversionIds field to allow no input
   - sha: b4b9128552aafce7ec2db8088b4e248811a978fd
