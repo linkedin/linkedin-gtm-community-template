@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: 6676ab8b274ec5ecaf8a962f882a41eedc1ffeb7
+    changeNotes: Relink the version in the metadata to address GTM bug
   - sha: 0d26029ef0d7e194225ebed4bd57d1ad68ee4216
     changeNotes: Announce Success whenever an event is attempted from lintrk
   - sha: 61d7d7cf207c62b05d8e3595288c4bccf8517dab
