@@ -14,6 +14,7 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "LinkedIn InsightTag 2.0",
+  "categories": ["ADVERTISING", "ANALYTICS"],
   "brand": {
     "id": "github.com_linkedin",
     "displayName": "linkedin",
