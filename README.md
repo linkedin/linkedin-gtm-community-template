@@ -16,7 +16,7 @@ This tag template provides LinkedIn’s InsightTag 2.0 implementation for tracki
 To make changes to the template, follow these steps:
 
 1. Open your Google Tag Manager account and [create a web container](https://support.google.com/tagmanager/answer/12974036?hl=en).
-2. [Import](https://developers.google.com/tag-platform/tag-manager/templates#export_and_import) the `template.tpl` file in this repoistory into the template editor.
+2. [Import](https://developers.google.com/tag-platform/tag-manager/templates#export_and_import) the `template.tpl` file in this repository into the template editor.
 3. The template will load into the editor. Make any necessary changes.
 4. Once you're done, [export](https://developers.google.com/tag-platform/tag-manager/templates#export_and_import) the template from the editor.
 5. Replace the contents of the `template.tpl` file with the contents of the newly generated `.tpl` file.
