@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: c7e2513ed82b4cf2110c3ece43132c04ea90270c
+    changeNotes: Remove logging permissions
   - sha: 93cd5cffe501b17013507543ee3c351e3dc3a6e5
     changeNotes: Add categories property
   - sha: 6676ab8b274ec5ecaf8a962f882a41eedc1ffeb7
