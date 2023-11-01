@@ -14,7 +14,11 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "LinkedIn InsightTag 2.0",
-  "categories": ["ADVERTISING", "MARKETING", "ANALYTICS"],
+  "categories": [
+    "ADVERTISING",
+    "MARKETING",
+    "ANALYTICS"
+  ],
   "brand": {
     "id": "github.com_linkedin",
     "displayName": "linkedin",
@@ -99,6 +103,8 @@ const conversionIds = data.conversionId ?
 const allPids = [];
 const pageUrl = data.customUrl ? data.customUrl : getUrl();
 const eventId = data.eventId;
+
+let isScriptInjected = false;
 
 /**
  * Checks presence of LinkedIn Insight tag code.
@@ -197,9 +203,12 @@ function trackByInsightTag() {
       lintrk('track', options);
     }
     data.gtmOnSuccess();
-  } else {
+  } else if (!isScriptInjected) {
+    isScriptInjected = true;
     setInWindow('_already_called_lintrk', true, true);
     injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js', didInjectInsightTag, didFailInsightTag);
+  } else {
+    didInjectInsightTag();
   }
 }
 
@@ -628,6 +637,31 @@ scenarios:
     \nassertThat(callStack[1]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=2&url=google.com&v=2&fmt=js&time=');\n\
     \nassertThat(callStack[2]).contains('https://px.ads.linkedin.com/collect?pid=123%2C456%2C789%2C299&tm=gtmv2&conversionId=3&url=google.com&v=2&fmt=js&time=');\n\
     \nassertApi('gtmOnSuccess').wasCalled();"
+- name: No API - Test script injection
+  code: |-
+    const mockData = { partnerId: '123' };
+
+    let checkCount = 0;
+    mock('copyFromWindow', (field) => {
+      if (field === 'lintrk') {
+        if (checkCount++ < 2) {
+          return undefined;
+        } else {
+          return () => {};
+        }
+      }
+    });
+
+    mock('injectScript', function(url, onSuccess, onFailure) {
+      assertThat(url).isEqualTo('https://snap.licdn.com/li.lms-analytics/insight.min.js');
+      onSuccess();
+    });
+
+
+    runCode(mockData);
+
+    assertApi('injectScript').wasCalled(1);
+    assertApi('gtmOnSuccess').wasCalled();
 
 
 ___NOTES___
