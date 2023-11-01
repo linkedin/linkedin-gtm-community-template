@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: d6d31ee6f8880ffd8037e4aea7146ccd7cbba27b
+    changeNotes: Add condition to validate insight tag is loading only once
   - sha: c7e2513ed82b4cf2110c3ece43132c04ea90270c
     changeNotes: Remove logging permissions
   - sha: 93cd5cffe501b17013507543ee3c351e3dc3a6e5
