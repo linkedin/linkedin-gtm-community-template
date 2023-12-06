@@ -212,10 +212,6 @@ function trackByInsightTag() {
   }
 }
 
-/**
- * Enable `trackByPlainGTM` for test purposes, and disable `trackByInsightTag`.
- * trackByPlainGTM();
- */
 trackByInsightTag();
 
 
@@ -579,6 +575,10 @@ scenarios:
       conversionId: '12576358'
     };
 
+    mock('injectScript', function(url, onSuccess, onFailure) {
+      onFailure();
+    });
+
     mock('sendPixel', (url, onSuccess, onFailure) => {
       assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=google.com&v=2&fmt=js&time=');
       onSuccess();
@@ -591,6 +591,10 @@ scenarios:
     const encodeUriComponent = require('encodeUriComponent');
     const getUrl = require('getUrl');
     const mockData = { partnerId: '123' };
+
+    mock('injectScript', function(url, onSuccess, onFailure) {
+      onFailure();
+    });
 
     mock('sendPixel', (url, onSuccess, onFailure) => {
       assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&url=' + encodeUriComponent(getUrl()) + '&v=2&fmt=js&time=');
@@ -609,7 +613,11 @@ scenarios:
           eventId: 'uniqueEventId123'
         };
 
-        mock('sendPixel', (url, onSuccess, onFailure) => {
+    mock('injectScript', function(url, onSuccess, onFailure) {
+      onFailure();
+    });
+
+    mock('sendPixel', (url, onSuccess, onFailure) => {
           assertThat(url).contains('https://px.ads.linkedin.com/collect?pid=123&tm=gtmv2&conversionId=12576358&url=' + encodeUriComponent(getUrl()) + '&eventId=uniqueEventId123&v=2&fmt=js&time=');
           onSuccess();
         });
@@ -629,7 +637,8 @@ scenarios:
     runCode(mockData);
 - name: No API - Multiple partnerIds and conversion ids
   code: "const mockData = {\n  partnerId: '123,456, 789, 299',\n  customUrl: 'google.com',\n\
-    \  conversionId: '1, 2, 3, 4, 5'\n};\nconst callStack = [];\nmock('sendPixel',\
+    \  conversionId: '1, 2, 3, 4, 5'\n};\nconst callStack = [];\n\nmock('injectScript',\
+    \ function(url, onSuccess, onFailure) {\n  onFailure();\n});\n\nmock('sendPixel',\
     \ (url, onSuccess, onFailure) => {\n  callStack.push(url);\n  \n  // Call success\
     \ only once when stack is full\n  if (callStack.length === 3) {\n    onSuccess();\n\
     \  }\n});\n\nrunCode(mockData);\n\nassertThat(callStack.length).isEqualTo(3);\n\
