@@ -1,12 +1,4 @@
-﻿___TERMS_OF_SERVICE___
-
-By creating or modifying this file you agree to Google Tag Manager's Community
-Template Gallery Developer Terms of Service available at
-https://developers.google.com/tag-manager/gallery-tos (or such other URL as
-Google may provide), as modified from time to time.
-
-
-___INFO___
+﻿___INFO___
 
 {
   "type": "TAG",
@@ -93,6 +85,7 @@ const getTimestamp = require('getTimestamp');
 const injectScript = require('injectScript');
 const copyFromWindow = require('copyFromWindow');
 const encodeUriComponent = require('encodeUriComponent');
+const callLater = require('callLater');
 
 /**
  * Globals
@@ -161,7 +154,10 @@ function generateQueryParamsForGTM(cid) {
 
 // Success call back to InsightTag injection
 function didInjectInsightTag() {
+  callLater(() => {
   trackByInsightTag();
+});
+  
 }
 
 // Callback to plain GTM when InsightTag code failed to inject
@@ -661,6 +657,12 @@ scenarios:
       }
     });
 
+    let isTrackedByInsightTag = false;
+
+    mock('callLater', () => {
+      isTrackedByInsightTag = true;
+    });
+
     mock('injectScript', function(url, onSuccess, onFailure) {
       assertThat(url).isEqualTo('https://snap.licdn.com/li.lms-analytics/insight.min.js');
       onSuccess();
@@ -670,7 +672,7 @@ scenarios:
     runCode(mockData);
 
     assertApi('injectScript').wasCalled(1);
-    assertApi('gtmOnSuccess').wasCalled();
+    assertThat(isTrackedByInsightTag).isTrue();
 
 
 ___NOTES___
