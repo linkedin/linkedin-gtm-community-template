@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: f0e6a713f3472cba97898ad87c12e991e685bd7e
+    changeNotes: Fixed failed tests and also fix intilize tag issue
   - sha: d6d31ee6f8880ffd8037e4aea7146ccd7cbba27b
     changeNotes: Add condition to validate insight tag is loading only once
   - sha: c7e2513ed82b4cf2110c3ece43132c04ea90270c
