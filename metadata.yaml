@@ -1,6 +1,8 @@
 homepage: "https://linkedin.com/campaignmanager"
 documentation: "https://www.linkedin.com/help/lms/answer/a416960"
 versions:
+  - sha: c07099c0e0cf0ade2057ee4016d3da9f32959169
+    changeNotes: Adding google tag manager terms of service
   - sha: f0e6a713f3472cba97898ad87c12e991e685bd7e
     changeNotes: Fixed failed tests and also fix intilize tag issue
   - sha: d6d31ee6f8880ffd8037e4aea7146ccd7cbba27b
